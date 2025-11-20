@@ -23,6 +23,7 @@ local function update_parent_effect(p: {
     return p
 end
 
+-- todo: investigate if "count" method used in indexes() and values() can improve performance here
 local function update_children_effect(p: {
     instance: Instance,
     cur_children_set: { [Instance]: true },
@@ -39,13 +40,14 @@ local function update_children_effect(p: {
             if new_children_set[child] then return end -- stops redundant reparenting
 
             new_children_set[child] = true -- record child set from this update
+            
             if not cur_children_set[child] then
                 child.Parent = p.instance -- if child wasn't already parented then parent it
             else 
                 cur_children_set[child] = nil -- remove child from cache if it was already in cache
             end  
         elseif type(child) == "table" then
-            for _, child in next, child do
+            for _, child in child do
                 process_child(child)
             end
         elseif type(child) == "function" then
@@ -68,7 +70,7 @@ local function update_children_effect(p: {
 
     process_child(new_children)
 
-    for child in next, cur_children_set do
+    for child in cur_children_set do
         child.Parent = nil -- unparent all children that weren't in the new children set
     end
 
@@ -85,7 +87,9 @@ return {
             property = property,
             source = source
         })
+
         evaluate_node(node)
+
         return node
     end,
 
@@ -94,7 +98,9 @@ return {
             instance = instance,
             source = parent
         })
+
         evaluate_node(node)
+        
         return node
     end,
 
