@@ -1,6 +1,6 @@
-name = "alicesaidhi/vide"
-version = "0.3.1-lite.672"
-description = "vide with types"
+name = "josephh310/vide"
+version = "0.4.0"
+description = "Vide with types, fixed for the new luau version"
 authors = ["centau"]
 license = "MIT"
 includes = ["src/*", "README.md", "pesde.toml"]
@@ -16,4 +16,3 @@ sourcemap_generator = ".pesde/sourcemap_generator.luau"
 
 [indices]
 default = "https://github.com/daimond113/pesde-index"
-
