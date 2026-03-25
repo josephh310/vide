@@ -26,16 +26,16 @@ export type source<T> = Source<T>
 export type Context<T> = context.Context<T>
 export type context<T> = Context<T>
 export type function getvideproperties(instance, instancetype)
-	local properties = {}
+	local properties: { [type]: type } = {}
 	local nil_type = types.singleton(nil)
 
-	local function is_signal(value: type)
+	local function is_signal(value: type): type | boolean
 		if not (value:is("class") or value:is("table")) then
 			return false
 		end
 
 		for key, value in value:properties() do
-			if key:value() == "Connect" and value.read.tag == "function" then
+			if value.read and key:value() == "Connect" and value.read.tag == "function" then
 				return value.read
 			end
 		end
@@ -43,61 +43,65 @@ export type function getvideproperties(instance, instancetype)
 		return false
 	end
 
-	local function insert(object)
+	local function insert(object: type)
         if object:is("class") == false then return end
 		if object:readparent() == nil then return end
 		for key, value in object:properties() do
-			local is_a_signal = is_signal(value.read)
-			if is_a_signal and value.read:is("table") then -- luau-lsp
-				local connect_fn = is_a_signal
+			local read = value.read
+			if not read then continue end
+			local is_a_signal = is_signal(read)
+			if is_a_signal ~= false and read:is("table") then -- luau-lsp
+				local connect_fn = is_a_signal :: type
 				local params = connect_fn:parameters()
-				table.remove(params.head, 1)
+				if params and params.head then table.remove(params.head, 1) end
 
-				local type = types.unionof(
+				local typ = types.unionof(
 					nil_type,
 					types.newfunction(params)
 				)
 
-				properties[key] = { read = type }
-			elseif is_a_signal and value.read:is("class") then -- roblox-studio
+				properties[key] = typ
+			elseif is_a_signal ~= false and read:is("class") then -- roblox-studio
 
-			elseif value.read:is("function") or value.read:is("intersection") then
+			elseif read:is("function") or read:is("intersection") then
 				continue
 			elseif value.write then
 
-				local value = value.write
+				local wvalue = value.write
 
-				local type = types.unionof(
-					types.newfunction({}, { head = { value } }),
-					value,
+				local typ = types.unionof(
+					types.newfunction({}, { head = { wvalue } }),
+					wvalue,
 					nil_type
 				)
 
-				properties[key] = { read = type }
+				properties[key] = typ
 			end
 		end
 
-		insert(object:readparent())
+		local parent = object:readparent()
+		if parent then insert(parent) end
 	end
 	insert(instance)
 
 	local vide_props = types.newtable(properties)
-	local vide_action = types.newtable({
-		[types.singleton "priority"] = { read = types.number },
-		[types.singleton "callback"] = { read = types.newfunction({ head = { instancetype } }) }
-	})
+	local vide_action: { [type]: type } = {
+		[types.singleton "priority"] = types.number,
+		[types.singleton "callback"] = types.newfunction({ head = { instancetype } })
+	}
+	local vide_action_table = types.newtable(vide_action)
 
 	local function_returns_child = types.newfunction()
 	local nested_table_or_function_or_child = types.newtable()
 	local union = types.unionof( instancetype, function_returns_child, nested_table_or_function_or_child )
 
 	nested_table_or_function_or_child:setindexer(types.number, union)
-	function_returns_child:setreturns({ union })
+	function_returns_child:setreturns({ types.unionof(union, nil_type) })
 
 	vide_props:setindexer(
 		types.number,
 		types.unionof(
-			vide_action,
+			vide_action_table,
 			instancetype,
 			function_returns_child,
 			vide_props,
@@ -122,7 +126,7 @@ local function step(dt: number)
     end
 end
 
-local stepped = game and game:GetService("RunService").Heartbeat:Connect(function(dt: number)
+local stepped: RBXScriptConnection? = game and game:GetService("RunService").Heartbeat:Connect(function(dt: number)
     task.defer(step, dt)
 end)
 
@@ -179,18 +183,18 @@ local vide = {
 
 setmetatable(vide :: any, {
     __index = function<T>(_, index: keyof<typeof(flags)>): index<typeof(flags), T>
-        if flags[index] == nil then
+        if (flags :: any)[index] == nil then
             error(`{tostring(index)} is not a valid member of vide`, 0)
         else
-            return flags[index]
+            return (flags :: any)[index]
         end
     end,
 
     __newindex = function<T>(_, index: T & keyof<typeof(flags)>, value: index<typeof(flags), T>)
-        if flags[index] == nil then
+        if (flags :: any)[index] == nil then
             error(`{tostring(index)} is not a valid member of vide, 0`)
         else
-            flags[index] = value
+            (flags :: any)[index] = value
         end
     end
 })
