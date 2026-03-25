@@ -10,9 +10,9 @@ local function untrack<T>(source: () -> T): T
         local effect = scope.effect
         scope.effect = false
 
-        local ok, result = xpcall(source, debug.traceback)
+        local ok, result = (xpcall :: any)(source, debug.traceback)
 
-        scope.effect = effect :: () -> ()
+        scope.effect = effect :: any
 
         if not ok then error(result, 0) end
 

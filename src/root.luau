@@ -20,7 +20,7 @@ local function root<T...>(fn: (destroy: () -> ()) -> T...): (() -> (), T...)
 
     push_scope(node)
 
-    local result = { xpcall(fn, debug.traceback, destroy) }
+    local result = { (xpcall :: any)(fn, debug.traceback, destroy) }
 
     pop_scope()
 

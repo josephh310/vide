@@ -10,11 +10,11 @@ local function batch(setter: () -> ())
         from = graph.get_update_queue_length()
     end
 
-    local ok, err: string? = xpcall(setter, debug.traceback)
+    local ok, err: string? = (xpcall :: any)(setter, debug.traceback)
 
     if not already_batching then
         flags.batch = false
-        graph.flush_update_queue(from)
+        graph.flush_update_queue(from :: number)
     end
 
     if not ok then error(`error occured while batching updates: {err}`, 0) end
