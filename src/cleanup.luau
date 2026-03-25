@@ -9,10 +9,10 @@ local function helper(obj: any)
         if typeof(obj) == "RBXScriptConnection" then function() obj:Disconnect() end
         elseif type(obj) == "thread" then function() task.cancel(obj) end
         elseif typeof(obj) == "Instance" then function() obj:Destroy() end
-        elseif obj.destroy then function() obj:destroy() end
-        elseif obj.disconnect then function() obj:disconnect() end
-        elseif obj.Destroy then function() obj:Destroy() end
-        elseif obj.Disconnect then function() obj:Disconnect() end
+        elseif obj.destroy then function() (obj :: any):destroy() end
+        elseif obj.disconnect then function() (obj :: any):disconnect() end
+        elseif obj.Destroy then function() (obj :: any):Destroy() end
+        elseif obj.Disconnect then function() (obj :: any):Disconnect() end
         else error "cannot cleanup given object"
 end
 

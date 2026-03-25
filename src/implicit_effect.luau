@@ -37,25 +37,26 @@ local function update_children_effect(p: {
     
     local function process_child(child: Instance | { Instance })
         if type(child) == "userdata" then
-            if new_children_set[child] then return end -- stops redundant reparenting
+            local inst = child :: Instance
+            if new_children_set[inst] then return end -- stops redundant reparenting
 
-            new_children_set[child] = true -- record child set from this update
-            
-            if not cur_children_set[child] then
-                child.Parent = p.instance -- if child wasn't already parented then parent it
-            else 
-                cur_children_set[child] = nil -- remove child from cache if it was already in cache
-            end  
+            new_children_set[inst] = true -- record child set from this update
+
+            if not cur_children_set[inst] then
+                inst.Parent = p.instance -- if child wasn't already parented then parent it
+            else
+                cur_children_set[inst] = nil -- remove child from cache if it was already in cache
+            end
         elseif type(child) == "table" then
             for _, child in child do
                 process_child(child)
             end
         elseif type(child) == "function" then
-            local node = create_node(assert(get_scope()), update_children_effect, {
+            local node = create_node(assert(get_scope()), update_children_effect :: any, {
                 instance = p.instance,
                 cur_children_set = {},
                 new_children_set = {},
-                source = child   
+                source = child
             })
     
             evaluate_node(node)
@@ -105,7 +106,7 @@ return {
     end,
 
     children = function(instance, children)
-        local node = create_node(assert_stable_scope(), update_children_effect, {
+        local node = create_node(assert_stable_scope(), update_children_effect :: any, {
             instance = instance,
             cur_children_set = {},
             new_children_set = {},

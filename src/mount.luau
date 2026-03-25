@@ -4,7 +4,7 @@ local apply = require "./apply"
 local function mount<T>(component: () -> T, target: Instance?): () -> ()
     return root(function()
         local result = component()
-        if target then apply(target, { result }) end
+        if target then apply(target, { result } :: any) end
     end)
 end
 

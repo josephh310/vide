@@ -1,10 +1,10 @@
 type p<T> = T?|()->T
 type e<T=()->()> = T?
 type a={priority: number, callback: (Instance) -> ()}
-type recursive<T> =T|{read recursive<T>}|()->recursive<T>
+type recursive<T> =T|{recursive<T>}|()->recursive<T>
 type c<T> =a|T|recursive<Instance>
-type Dictionary = {read [string]: any}
-type Array = {read any}
+type Dictionary = {[string]: any}
+type Array = {any}
 export type vCanvasGroup = {
 	GroupColor3: p<Color3>,
 	GroupTransparency: p<number>,

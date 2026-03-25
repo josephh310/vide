@@ -47,13 +47,13 @@ local function borrow_cache(): Cache
     else
         return {
             events = {},
-            actions = setmetatable({} :: any, { -- lazy init
+            actions = setmetatable({} :: any, {
                 __index = function(self, i) self[i] = {}; return self[i] end
-            }),
+            }) :: any,
             parent = nil,
             nested_debug = setmetatable({} :: any, {
                 __index = function(self, i: number) self[i] = {}; return self[i] end
-            }),
+            }) :: any,
             nested_stack = {}
         }
     end
@@ -93,7 +93,7 @@ local function process_properties(properties: Map<unknown, unknown>, instance: I
                 implicit_effect.children(instance, value :: () -> ArrayOrV<Instance>) -- bind children
             elseif type(value) == "table" then
                 if is_action(value) then
-                    table.insert(cache.actions[(value :: any).priority], (value :: any).callback :: () -> ()) -- add action to buffer
+                    table.insert(cache.actions[(value :: any).priority], (value :: any).callback :: (Instance) -> ()) -- add action to buffer
                 elseif flags.defer_nested_properties then
                     table.insert(cache.nested_stack, value :: {})
                     table.insert(cache.nested_stack, depth + 1) -- push table to stack for later processing
@@ -124,7 +124,7 @@ local function apply<T>(instance: T & Instance, properties: { [unknown]: unknown
     repeat
         process_properties(properties, instance, caches, depth)
         depth = table.remove(nested_stack) :: number
-        properties = table.remove(nested_stack) :: {}
+        properties = table.remove(nested_stack) :: any
     until not properties
 
     for i = 1, #events, 2 do
